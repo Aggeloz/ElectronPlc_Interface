@@ -3,7 +3,7 @@
   "productName": "electronplc_interface",
   "version": "1.0.0",
   "description": "My Electron application description",
-  "main": "src/index.js",
+  "main": "src/backend.js",
   "scripts": {
     "start": "electron-forge start",
     "package": "electron-forge package",
