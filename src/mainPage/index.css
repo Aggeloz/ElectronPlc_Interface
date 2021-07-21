@@ -1,0 +1,95 @@
+body {
+    font-family: 'Open Sans', sans-serif;
+    /* font-family: 'Roboto', sans-serif; */
+    /* font-weight: 300; */
+    margin: auto;
+    color: white;
+    background-color: #363636;
+}
+
+.title {
+    margin: 10px;
+    text-align: center;
+    font-size: 30px;
+}
+
+.bigTitle {
+    margin: 10px;
+    text-align: center;
+    font-size: 40px;
+}
+
+.args {
+    text-align: center;
+}
+
+.flex-container {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    align-content: center;
+    padding: 25px;
+}
+
+.flex-items:nth-child {
+    display: block;
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-basis: auto;
+    align-self: auto;
+    order: 0;
+}
+
+.flex-container2 {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: space-around;
+    align-items: center;
+    align-content: center;
+    padding: 25px;
+}
+
+.flex-items2:nth-child {
+    display: block;
+    flex-grow: 2;
+    flex-shrink: 1;
+    flex-basis: auto;
+    align-self: flex-start;
+    order: 1;
+}
+
+.statusArgs {
+    font-size: 20px;
+}
+
+.button {
+    background-color: rgb(0, 0, 0);
+    /* Green */
+    min-width: 250px;
+    border: none;
+    color: white;
+    padding: 12px 25px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    transition-duration: 0.4s;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.button:hover {
+    background-color: white;
+    color: black;
+}
+
+/* Remove increment from bumber inputs */
+
+input::-webkit-outer-spin-button, input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
