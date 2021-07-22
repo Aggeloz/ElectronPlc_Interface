@@ -140,7 +140,7 @@ const knex = require('knex');
 //     connection: {
 //         host: '192.168.1.120',
 //         user: 'Aggelos',
-//         password: 'aggel0s100v0',
+//         password: 'Test',
 //         database: 'TestDB',
 //     },
 // });
