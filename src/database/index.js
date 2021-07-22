@@ -1,22 +1,27 @@
-const { Client } = require('pg');
+const knex = require('knex');
 
-
-const client = new Client({
-    host: "192.168.1.120",
-    user: "Aggelos",
-    port: 5432,
-    password: "ptolemeo55613",
-    database: "TestDB"
+const db = knex({
+    client: 'pg',
+    connection: {
+        host: '192.168.1.120',
+        user: 'Aggelos',
+        password: 'aggel0s100v0',
+        database: 'TestDB',
+    },
 });
 
-connect();
-function connect() {
 
-    client.connect(err => {
-        if (err) {
-            console.error('connection error', err.stack)
-        } else {
-            console.log('connected')
-        }
+// const db = knex({
+//     client: 'pg',
+//     // connection: 'postgresql://postgres:hunter3@localhost/bigdata03',
+//     connection: process.env.DB_CONNECTION,
+// });
+
+db
+    .select('*')
+    .from("TestTable")
+    .then(function (users) {
+        console.log(users);
+        // [ { id: 1, description: 'Burrito', ... } ]
     })
-}
+    .catch(err => console.log(err.stack));

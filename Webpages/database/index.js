@@ -5,18 +5,15 @@ const client = new Client({
     host: "192.168.1.120",
     user: "Aggelos",
     port: 5432,
-    password: "ptolemeo55613",
-    database: "TestDB"
+    password: "aggel0s100v0",
+    database: "postgres"
 });
 
-connect();
+
 function connect() {
 
-    client.connect(err => {
-        if (err) {
-            console.error('connection error', err.stack)
-        } else {
-            console.log('connected')
-        }
-    })
+    client
+        .connect()
+        .then(() => console.log('Connected'))
+        .catch(err => console.error('error during connection', err.stack))
 }
