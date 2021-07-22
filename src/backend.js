@@ -3,7 +3,17 @@ const path = require('path');
 let tray = null;
 
 
+ipcMain.on("dbConnection", (event, data)=> {
+  // TODO: 
+  // User Data to connect to PG DB
+  // If statement to alert user if 
+  // connection was successful or not
+  // Alert user if connection fail
+  // Lock inputs if succeded
+  // Also use some of the values for main window
 
+
+});
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) { // eslint-disable-line global-require
@@ -113,13 +123,60 @@ try {
 
 
 
-// const createWindow = () => {
-//   const mainWindow = new BrowserWindow({
-//     width: 800,
-//     height: 600,
-//   });
 
-//   mainWindow.loadFile(path.join(__dirname, 'index.html'));
 
-//   mainWindow.webContents.openDevTools();
-// };
+
+// ---------------------------------
+// Connect to database using Knex
+const knex = require('knex');
+
+
+// const db = knex({
+//     client: 'pg',
+//     connection: {
+//         host: '192.168.1.120',
+//         user: 'Aggelos',
+//         password: 'aggel0s100v0',
+//         database: 'TestDB',
+//     },
+// });
+
+
+// db
+//     .select('*')
+//     .from("TestTable")
+//     .then(function (users) {
+//         console.log(users);
+//         // [ { id: 1, description: 'Burrito', ... } ]
+//     })
+//     .catch(err => console.log(err.stack));
+
+function connect() {
+  let host = document.getElementById('host').value;
+  let user = document.getElementById('user').value;
+  let password = document.getElementById('password').value;
+  let dataBase = document.getElementById('database').value;
+
+
+
+
+
+  const db = knex({
+    client: 'pg',
+    connection: {
+      host: host,
+      user: user,
+      password: password,
+      database: dataBase,
+    },
+  });
+  db
+    .select('*')
+    .from("TestTable")
+    .then(function (users) {
+      console.log(users);
+      // [ { id: 1, description: 'Burrito', ... } ]
+    })
+    .catch(err => console.log(err.stack));
+
+}

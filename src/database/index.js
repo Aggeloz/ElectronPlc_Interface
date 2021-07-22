@@ -1,27 +1,16 @@
-const knex = require('knex');
+const { ipcRenderer } = require('electron');
 
-const db = knex({
-    client: 'pg',
-    connection: {
-        host: '192.168.1.120',
-        user: 'Aggelos',
-        password: 'aggel0s100v0',
-        database: 'TestDB',
-    },
-});
+let host;
+let user;
+let pass;
+let db;
+let data = [];
 
-
-// const db = knex({
-//     client: 'pg',
-//     // connection: 'postgresql://postgres:hunter3@localhost/bigdata03',
-//     connection: process.env.DB_CONNECTION,
-// });
-
-db
-    .select('*')
-    .from("TestTable")
-    .then(function (users) {
-        console.log(users);
-        // [ { id: 1, description: 'Burrito', ... } ]
-    })
-    .catch(err => console.log(err.stack));
+function connect() {
+    host = document.getElementById('host').value;
+    user = document.getElementById('user').value;
+    pass = document.getElementById('password').value;
+    db = document.getElementById('database').value;
+    data.push(host,user,pass,db);
+    ipcRenderer.send('dbConnection', data);
+};

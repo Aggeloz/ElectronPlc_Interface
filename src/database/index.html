@@ -16,29 +16,29 @@
     <div class="inputGroup">
         <div class="bdInput">
             <label for="host">Host:</label>
-            <input type="text" name="host">
+            <input id="host" type="text" name="host">
         </div>
         <div class="bdInput">
             <label for="user">User:</label>
-            <input type="text" name="user">
+            <input id="user" type="text" name="user">
         </div>
-        <div class="bdInput">
+        <!-- <div class="bdInput">
             <label for="port">Port:</label>
             <input type="text" name="port">
-        </div>
+        </div> -->
         <div class="bdInput">
             <label for="password">Password:</label>
-            <input type="text" name="password">
+            <input id="password" type="text" name="password">
         </div>
         <div class="bdInput">
             <label for="database">Database:</label>
-            <input type="text" name="database">
+            <input id="database" type="text" name="database">
         </div>
     </div>
 
     <div style="text-align: center; padding: 15px;">
         <button onclick="connect();" class="button">Connect to Database</button>
-        <button onclick="disconnect();" class="button">Connect to Database</button>
+        <button onclick="disconnect();" class="button">Disconnect from Database</button>
     </div>
     <script src="index.js"></script>
 </body>
