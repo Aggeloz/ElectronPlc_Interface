@@ -2,8 +2,9 @@ const { app, BrowserWindow, ipcMain, Tray, Menu, Notification } = require('elect
 const path = require('path');
 let tray = null;
 
-
+// DATABASE CONNECTION FUNC
 ipcMain.on("dbConnection", (event, data)=> {
+  console.log(data);
   // TODO: 
   // User Data to connect to PG DB
   // If statement to alert user if 
@@ -11,9 +12,12 @@ ipcMain.on("dbConnection", (event, data)=> {
   // Alert user if connection fail
   // Lock inputs if succeded
   // Also use some of the values for main window
-
-
+  event.reply('reply', 'data');
+  // Call function to connect to db
 });
+
+
+
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) { // eslint-disable-line global-require
