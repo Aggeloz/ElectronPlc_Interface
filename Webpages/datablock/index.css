@@ -1,0 +1,46 @@
+body {
+    font-family: 'Open Sans', sans-serif;
+    /* font-family: 'Roboto', sans-serif; */
+    /* font-weight: 300; */
+    margin: auto;
+    color: white;
+    background-color: #363636;
+}
+
+.title {
+    margin: 10px;
+    text-align: center;
+    font-size: 30px;
+}
+
+.bigTitle {
+    margin: 10px;
+    text-align: center;
+    font-size: 40px;
+}
+
+.args {
+    text-align: center;
+}
+
+.button {
+    background-color: rgb(0, 0, 0);
+    /* Green */
+    min-width: 250px;
+    border: none;
+    color: white;
+    padding: 12px 25px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    transition-duration: 0.4s;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.button:hover {
+    background-color: white;
+    color: black;
+}
