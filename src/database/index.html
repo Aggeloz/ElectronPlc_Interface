@@ -34,11 +34,12 @@
             <label for="database">Database:</label>
             <input id="database" type="text" name="database">
         </div>
+        <h1 id="dbStatus" class="title">Status: -</h1>
     </div>
 
     <div style="text-align: center; padding: 15px;">
-        <button onclick="connect();" class="button">Connect to Database</button>
-        <button onclick="disconnect();" class="button">Disconnect from Database</button>
+        <button id="connect" onclick="connect();" class="button">Connect to Database</button>
+        <button id="disconnect" onclick="disconnect();" class="button">Disconnect from Database</button>
     </div>
     <script src="index.js"></script>
 </body>

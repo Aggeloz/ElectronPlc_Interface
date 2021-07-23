@@ -1,20 +1,34 @@
 const { app, BrowserWindow, ipcMain, Tray, Menu, Notification } = require('electron');
+const knex = require('knex');
 const path = require('path');
 let tray = null;
+let dbOK = false;
+let dbData = {};
+let db;
+process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true';
 
-// DATABASE CONNECTION FUNC
-ipcMain.on("dbConnection", (event, data)=> {
-  console.log(data);
-  // TODO: 
-  // User Data to connect to PG DB
-  // If statement to alert user if 
-  // connection was successful or not
-  // Alert user if connection fail
-  // Lock inputs if succeded
-  // Also use some of the values for main window
-  event.reply('reply', 'data');
+
+
+// Database connection renderer process handler
+
+ipcMain.on("dbConnection", (event, data) => {
   // Call function to connect to db
+  dbData = data;
+  connectToDB(data, event);
 });
+ipcMain.on("disconnect", (event, data) => {
+  // Call function to connect to db
+  db.destroy();
+  event.reply("conn-valid", [false, "Manually Disconnected"]);
+  dbOK = false;
+});
+
+
+ipcMain.on("dbOK", (event, data) => {
+  // Checks DB connection status
+  event.reply("dbOK",[dbOK, dbData]);
+});
+
 
 
 
@@ -29,26 +43,16 @@ if (require('electron-squirrel-startup')) { // eslint-disable-line global-requir
 const menuTemplate = [
   {
     label: 'Database Settings',
-    submenu: [
-      {
-        label: 'Open Database settings window',
-        click: () => {
-          new Notification({ title: "Database Settings", body: "Opening Database Settings" }).show();
-          createDatabaseWindow();
-        }
-      }
-    ]
+    click: () => {
+      new Notification({ title: "Database Settings", body: "Opening Database Settings" }).show();
+      createDatabaseWindow();
+    }
   },
   {
     label: 'Charts',
-    submenu: [
-      {
-        label: 'Open chart window',
-        click: () => {
-          new Notification({ title: "Charts", body: "Opening Charting Page" }).show()
-        }
-      }
-    ]
+    click: () => {
+      new Notification({ title: "Charts", body: "Opening Charting Page" }).show()
+    }
   },
 ];
 
@@ -66,7 +70,7 @@ const createMainWindow = () => {
     }
   });
 
-  
+
   mainWindow.loadFile(path.join(__dirname, '/mainPage/index.html'));
   mainWindow.removeMenu();
   mainWindow.webContents.openDevTools();
@@ -82,11 +86,23 @@ const createDatabaseWindow = () => {
     }
   });
 
+  // const dbMenu = [
+  //   {
+  //     label: 'Test Menu',
+  //     click: () => {
+  //       new Notification({ title: "Test", body: "Test" }).show();
+  //     }
+  //   },
+  // ];
+
   
   databaseWindow.loadFile(path.join(__dirname, '/database/index.html'));
   databaseWindow.removeMenu();
   databaseWindow.webContents.openDevTools();
   databaseWindow.setResizable(false);
+
+  // const customMenu1 = Menu.buildFromTemplate(dbMenu);
+  // Menu.setApplicationMenu(customMenu1);
 };
 
 
@@ -130,57 +146,43 @@ try {
 
 
 
-// ---------------------------------
-// Connect to database using Knex
-const knex = require('knex');
 
-
-// const db = knex({
-//     client: 'pg',
-//     connection: {
-//         host: '192.168.1.120',
-//         user: 'Aggelos',
-//         password: 'Test',
-//         database: 'TestDB',
-//     },
-// });
-
-
-// db
-//     .select('*')
-//     .from("TestTable")
-//     .then(function (users) {
-//         console.log(users);
-//         // [ { id: 1, description: 'Burrito', ... } ]
-//     })
-//     .catch(err => console.log(err.stack));
-
-function connect() {
-  let host = document.getElementById('host').value;
-  let user = document.getElementById('user').value;
-  let password = document.getElementById('password').value;
-  let dataBase = document.getElementById('database').value;
-
-
-
-
-
-  const db = knex({
+// Database connection
+function connectToDB(data, event) {
+  db = knex({
     client: 'pg',
     connection: {
-      host: host,
-      user: user,
-      password: password,
-      database: dataBase,
+      host: data.host,
+      user: data.user,
+      password: data.pass,
+      database: data.db,
     },
   });
-  db
-    .select('*')
-    .from("TestTable")
-    .then(function (users) {
-      console.log(users);
-      // [ { id: 1, description: 'Burrito', ... } ]
-    })
-    .catch(err => console.log(err.stack));
 
+  db.raw('select 1+1 as result').then(function () {
+    // Here if the connection is valid
+    event.reply("conn-valid", [true]);
+    dbOK = true;
+  }).catch(err => {
+    // Here if an error occured during connection
+    // console.log(err);
+    event.reply("conn-valid", [false, err]);
+    dbOK = false;
+  });
+  return;
 }
+
+
+
+
+
+
+
+
+  // db
+  //   .select('*')
+  //   .from("TestTable")
+  //   .then(function (users) {
+  //     console.log(users);
+  //   })
+  //   .catch(err => console.log(err.stack, "Here"));
