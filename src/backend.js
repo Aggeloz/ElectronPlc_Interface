@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, Tray, Menu, Notification } = require('electron');
+const { app, BrowserWindow, ipcMain, Tray, Menu, Notification, dialog } = require('electron');
 const knex = require('knex');
 const path = require('path');
 let tray = null;
@@ -10,14 +10,15 @@ process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true';
 
 
 // Database connection renderer process handler
-
 ipcMain.on("dbConnection", (event, data) => {
   // Call function to connect to db
   dbData = data;
   connectToDB(data, event);
 });
+
+
 ipcMain.on("disconnect", (event, data) => {
-  // Call function to connect to db
+  // Destroy DB connection
   db.destroy();
   event.reply("conn-valid", [false, "Manually Disconnected"]);
   dbOK = false;
@@ -27,6 +28,29 @@ ipcMain.on("disconnect", (event, data) => {
 ipcMain.on("dbOK", (event, data) => {
   // Checks DB connection status
   event.reply("dbOK",[dbOK, dbData]);
+});
+ipcMain.on("openFile", (event, data) => {
+  let dialogOptions = {
+    title: 'Navigate to Datablock text file and select it',
+    properties: ['openFile'],
+    filters: [
+      { name: 'txt', extensions: ['txt'] }
+    ],
+  };
+
+
+  dialog.showOpenDialog(
+    dialogOptions
+  ).then((file) => {
+    if (file.canceled === true) {
+      console.log("No file selected");
+    } else {
+      console.log(file.filePaths);
+      event.reply('sendFile', file);
+      
+    }
+
+  });
 });
 
 
@@ -46,6 +70,13 @@ const menuTemplate = [
     click: () => {
       new Notification({ title: "Database Settings", body: "Opening Database Settings" }).show();
       createDatabaseWindow();
+    }
+  },
+  {
+    label: 'Datablock',
+    click: () => {
+      new Notification({ title: "Datablock", body: "Opening Datablock selection window" }).show()
+      createDatablockSelWindow();
     }
   },
   {
@@ -76,6 +107,9 @@ const createMainWindow = () => {
   mainWindow.webContents.openDevTools();
   mainWindow.setResizable(false);
 };
+
+
+
 const createDatabaseWindow = () => {
   const databaseWindow = new BrowserWindow({
     width: 800,
@@ -83,6 +117,24 @@ const createDatabaseWindow = () => {
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
+    }
+  });
+  
+  databaseWindow.loadFile(path.join(__dirname, '/database/index.html'));
+  databaseWindow.removeMenu();
+  databaseWindow.webContents.openDevTools();
+  databaseWindow.setResizable(false);
+};
+
+
+const createDatablockSelWindow = () => {
+  const dBlockWindow = new BrowserWindow({
+    width: 800,
+    height: 400,
+    webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: false,
+      // enableRemoteModule: true,
     }
   });
 
@@ -96,10 +148,10 @@ const createDatabaseWindow = () => {
   // ];
 
   
-  databaseWindow.loadFile(path.join(__dirname, '/database/index.html'));
-  databaseWindow.removeMenu();
-  databaseWindow.webContents.openDevTools();
-  databaseWindow.setResizable(false);
+  dBlockWindow.loadFile(path.join(__dirname, '/datablock/index.html'));
+  dBlockWindow.removeMenu();
+  dBlockWindow.webContents.openDevTools();
+  dBlockWindow.setResizable(false);
 
   // const customMenu1 = Menu.buildFromTemplate(dbMenu);
   // Menu.setApplicationMenu(customMenu1);
