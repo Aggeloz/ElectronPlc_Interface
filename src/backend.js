@@ -34,7 +34,7 @@ ipcMain.on("openFile", (event, data) => {
     title: 'Navigate to Datablock text file and select it',
     properties: ['openFile'],
     filters: [
-      { name: 'txt', extensions: ['txt'] }
+      { name: 'txt', extensions: ['txt', 'TXT'] },
     ],
   };
 
