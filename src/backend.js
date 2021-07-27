@@ -1,5 +1,6 @@
 const { app, BrowserWindow, ipcMain, Tray, Menu, Notification, dialog } = require('electron');
 const { giveFileGetBlock } = require('./parseDatablock/parser');
+const { createBlockSchema } = require('./knexActions');
 const knex = require('knex');
 const path = require('path');
 let tray = null;
@@ -49,7 +50,8 @@ ipcMain.on("openFile", (event, data) => {
     } else {
       console.log(file.filePaths);
       let all = giveFileGetBlock(file.filePaths[0]);
-      console.log(all);
+      // console.log(all);
+      createBlockSchema(all, db);
     }
   });
 });
