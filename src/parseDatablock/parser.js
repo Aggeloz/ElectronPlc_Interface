@@ -10,22 +10,19 @@ let dbVars = {};
 
 function giveFileGetBlock(filePath) {
     // dbVars = {};
-    // let data = [];
+    let allVars = [];
     varName = [];
     varType = [];
     varMemory = [];
-    fs.readFile(filePath, 'utf8', (err, data) => {
-        if(err) {
-            console.error(err);
-            return;
-        } else {
-            var part = data.substring(
-                data.lastIndexOf("STRUCT ") + "STRUCT ".length,
-                data.lastIndexOf("END_STRUCT;")
-            );
-            
-            let txt = part.split('\n');
-            let editedContent;
+
+    // REMEMBER TO USE FILE READ SYNC 
+    let data = fs.readFileSync(filePath, {encoding: 'utf8', flag: 'r'}).toString();
+    let part = data.substring(
+        data.lastIndexOf("STRUCT ") + "STRUCT ".length,
+        data.lastIndexOf("END_STRUCT;")
+    );
+    let txt = part.split('\n');
+    let editedContent;
             for (let j = 0; j < txt.length; j++) {
                 for (let i = 0; i < rules.memory.length; i++) {
                     if (txt[j].includes(rules.names[i])) {
@@ -37,75 +34,77 @@ function giveFileGetBlock(filePath) {
                         varName.push(editedContent);
                         varType.push(rules.types[i]);
                         varMemory.push(rules.memory[i]);
-                        
                         // console.log(editedContent);
-                        
                     }
                 }
             }
-        }
-    });
-    // data.push(varName, varType, varMemory);
-    parseDb(varName, varType, varMemory, basename(filePath).replace('.txt', '').toUpperCase()).then(all => {
-        console.log(all);
-    });
-    // console.log(varName, varMemory, varType);
+
+
+    allVars.push(varName, varType, varMemory);
+    let all = parseDb(allVars, basename(filePath).replace('.txt', '').toUpperCase());
+    return all;
 };
 
 
 
-async function parseDb(varName, varType, varMemory, db) {
-    // data.push(varName, varType, varMemory);
+function parseDb(allVars, db) {
     let indexMemory = new Decimal(0.0);
 
-    console.log(varName);
-    console.log(varName[0]);
-    for (let i = 0; i < varName.length; i++) {
+    for (let i = 0; i < allVars[0].length; i++) {
         // First if from old parsing method
-        if (varType[i] === 'X' && indexMemory % 1 === 0) {
-            dbVars[(varName[i])] = db + ',' + varType[i] + indexMemory + '.0';
-            indexMemory = indexMemory.plus(varMemory[i])
+        if (allVars[1][i] === 'X' && indexMemory % 1 === 0) {
+            dbVars[(allVars[0][i])] = db + ',' + allVars[1][i] + indexMemory + '.0';
+            indexMemory = indexMemory.plus(allVars[2][i])
+            // console.log(parseFloat(indexMemory));
+        }
+        // This if statement fixes the bit problem
+        else if (allVars[1][i] === 'X' && allVars[1][i + 1] === 'X' && Decimal.mod(indexMemory, 1) >= 0.7) {
+            console.log(Decimal.mod(indexMemory, 1));
+            dbVars[(allVars[0][i])] = db + ',' + allVars[1][i] + indexMemory;
+            indexMemory = indexMemory.plus(0.3);
+            console.log(Decimal.mod(indexMemory, 2));
             // console.log(parseFloat(indexMemory));
         }
         // Second if from old parsing method
-        else if (varType[i] === 'X' && (varType[i - 1] === 'X' || varType[i + 1] === 'X')) {
-            dbVars[(varName[i])] = db + ',' + varType[i] + indexMemory;
-            indexMemory = indexMemory.plus(varMemory[i]);
+        else if (allVars[1][i] === 'X' && (allVars[1][i - 1] === 'X' || allVars[1][i + 1] === 'X')) {
+            dbVars[(allVars[0][i])] = db + ',' + allVars[1][i] + indexMemory;
+            indexMemory = indexMemory.plus(allVars[2][i]);
             // console.log(parseFloat(indexMemory));
         }
         // Third if from old parsing methon
-        else if (varType[i] === 'BYTE' && varType[i + 1] === 'WORD') {
+        else if (allVars[1][i] === 'BYTE' && allVars[1][i + 1] === 'WORD') {
             indexMemory = Decimal.ceil(indexMemory);
-            dbVars[(varName[i])] = db + ',' + varType[i] + indexMemory;
-            indexMemory = indexMemory.plus(varMemory[i]);
+            dbVars[(allVars[0][i])] = db + ',' + allVars[1][i] + indexMemory;
+            indexMemory = indexMemory.plus(allVars[2][i]);
             // console.log(parseFloat(indexMemory));
         }
         // Fourth if from old parsing method
-        else if (varType[i] === 'BYTE' && varType[i + 1] === 'BYTE') {
+        else if (allVars[1][i] === 'BYTE' && allVars[1][i + 1] === 'BYTE') {
             indexMemory = Decimal.ceil(indexMemory);
-            dbVars[(varName[i])] = db + ',' + varType[i] + indexMemory;
-            indexMemory = indexMemory.plus(varMemory[i]);
+            dbVars[(allVars[0][i])] = db + ',' + allVars[1][i] + indexMemory;
+            indexMemory = indexMemory.plus(allVars[2][i]);
             indexMemory = indexMemory.plus(1);
             // console.log(parseFloat(indexMemory));
         }
         // Fifth if from old parsing method
-        else if ((varType[i] === 'INT' || varType[i] === 'DINT' || varType[i] === 'REAL' || varType[i] === 'TIME' || varType[i] === 'USINT') && (indexMemory !== undefined && indexMemory % 1 !== 0)) {
-            indexMemory = Decimal.ceil(indexMemory);
+        else if ((allVars[1][i] === 'INT' || allVars[1][i] === 'DINT' || allVars[1][i] === 'REAL' || allVars[1][i] === 'TIME' || allVars[1][i] === 'USINT') && (indexMemory !== undefined && indexMemory % 1 !== 0)) {
+            indexMemory = Decimal.floor(indexMemory);
+            // indexMemory = Decimal.ceil(indexMemory);
             indexMemory = indexMemory.plus(1);
-            dbVars[(varName[i])] = db + ',' + varType[i] + indexMemory;
-            indexMemory = indexMemory.plus(varMemory[i]);
+            dbVars[(allVars[0][i])] = db + ',' + allVars[1][i] + indexMemory;
+            indexMemory = indexMemory.plus(allVars[2][i]);
             // console.log(parseFloat(indexMemory));
         }
-        else if ((varType[i] === 'BYTE' && varType[i - 1] === 'INT')) {
-            dbVars[(varName[i])] = db + ',' + varType[i] + indexMemory;
+        else if ((allVars[1][i] === 'BYTE' && allVars[1][i - 1] === 'INT')) {
+            dbVars[(allVars[0][i])] = db + ',' + allVars[1][i] + indexMemory;
             indexMemory = indexMemory.plus(2);
         }
         // Sixth if from old parsing method
         else {
             indexMemory = Decimal.ceil(indexMemory);
-            dbVars[(varName[i])] = db + ',' + varType[i] + indexMemory;
-            indexMemory = indexMemory.plus(varMemory[i]);
-            // console.log('Variable mem:', varMemory[i]);
+            dbVars[(allVars[0][i])] = db + ',' + allVars[1][i] + indexMemory;
+            indexMemory = indexMemory.plus(allVars[2][i]);
+            // console.log('Variable mem:', allVars[2][i]);
             // console.log('Point:', parseFloat(indexMemory));
         }
     }
