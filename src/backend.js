@@ -1,4 +1,5 @@
 const { app, BrowserWindow, ipcMain, Tray, Menu, Notification, dialog } = require('electron');
+const { giveFileGetBlock } = require('./parseDatablock/parser');
 const knex = require('knex');
 const path = require('path');
 let tray = null;
@@ -29,6 +30,7 @@ ipcMain.on("dbOK", (event, data) => {
   // Checks DB connection status
   event.reply("dbOK",[dbOK, dbData]);
 });
+// Open datablock file 
 ipcMain.on("openFile", (event, data) => {
   let dialogOptions = {
     title: 'Navigate to Datablock text file and select it',
@@ -38,7 +40,7 @@ ipcMain.on("openFile", (event, data) => {
     ],
   };
 
-
+// Get Datablock file
   dialog.showOpenDialog(
     dialogOptions
   ).then((file) => {
@@ -46,15 +48,11 @@ ipcMain.on("openFile", (event, data) => {
       console.log("No file selected");
     } else {
       console.log(file.filePaths);
-      event.reply('sendFile', file);
-      
+      let all = giveFileGetBlock(file.filePaths[0]);
+      console.log(all);
     }
-
   });
 });
-
-
-
 
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
