@@ -59,10 +59,10 @@ function parseDb(allVars, db) {
         }
         // This if statement fixes the bit problem
         else if (allVars[1][i] === 'X' && allVars[1][i + 1] === 'X' && Decimal.mod(indexMemory, 1) >= 0.7) {
-            console.log(Decimal.mod(indexMemory, 1));
+            // console.log(Decimal.mod(indexMemory, 1));
             dbVars[(allVars[0][i])] = db + ',' + allVars[1][i] + indexMemory;
             indexMemory = indexMemory.plus(0.3);
-            console.log(Decimal.mod(indexMemory, 2));
+            // console.log(Decimal.mod(indexMemory, 2));
             // console.log(parseFloat(indexMemory));
         }
         // Second if from old parsing method
