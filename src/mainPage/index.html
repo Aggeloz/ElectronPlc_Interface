@@ -27,25 +27,27 @@
         <div class="flex-items2">
             <div class="args">
                 <h1 class="title">PLC</h1>
-                <h1 class="statusArgs">IP: 192.168.1.1</h1>
-                <h1 class="statusArgs">PORT: 102</h1>
-                <h1 class="statusArgs">SLOT: 0</h1>
-                <h1 class="statusArgs">RACK: 1</h1>
+                <h1 id="plcIp" class="statusArgs">IP: -</h1>
+                <h1 id="plcPort" class="statusArgs">PORT: -</h1>
+                <h1 id="plcSlot" class="statusArgs">SLOT: -</h1>
+                <h1 id="plcRack" class="statusArgs">RACK: -</h1>
             </div>
         </div>
         <div class="flex-items2">
             <div class="args">
                 <h1 class="title">Datablock Values</h1>
-                <h1 class="statusArgs">Value1</h1>
-                <h1 class="statusArgs">Value2</h1>
-                <h1 class="statusArgs">Value3</h1>
-                <button class="button">Click to show all values</button>
+                <div id="blockValues">
+                    <!-- <h1 class="statusArgs">-</h1> -->
+                </div>
+                <button id="showAllVals" class="button">Click to show all values</button>
             </div>
         </div>
         <div class="args">
             <h1 class="title">Database</h1>
-            <h1 class="statusArgs">Name: TestDB</h1>
-            <h1 class="statusArgs">Table: TestTable</h1>
+            <div>
+                <h1 id="dbName" class="statusArgs">Name: -</h1>
+                <h1 id="dbTable" class="statusArgs">Table: -</h1>
+            </div>
         </div>
     </div>
 </body>

@@ -12,6 +12,12 @@ process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true';
 
 
 // Database connection renderer process handler
+ipcMain.on("checkDBOK", (event, data) => {
+  event.reply("isDBOk", dbOK);
+});
+
+
+// Database connection renderer process handler
 ipcMain.on("dbConnection", (event, data) => {
   // Call function to connect to db
   dbData = data;
@@ -51,7 +57,7 @@ ipcMain.on("openFile", (event, data) => {
       console.log(file.filePaths);
       let all = giveFileGetBlock(file.filePaths[0]);
       // console.log(all);
-      createBlockSchema(all, db);
+      createBlockSchema(db, all);
     }
   });
 });
@@ -74,10 +80,12 @@ const menuTemplate = [
   },
   {
     label: 'Datablock',
+    enabled: false,
     click: () => {
       new Notification({ title: "Datablock", body: "Opening Datablock selection window" }).show()
       createDatablockSelWindow();
-    }
+    },
+    id: 'datablockMenu'
   },
   {
     label: 'Charts',
@@ -221,6 +229,7 @@ function connectToDB(data, event) {
     event.reply("conn-valid", [false, err]);
     dbOK = false;
   });
+
   return;
 }
 
