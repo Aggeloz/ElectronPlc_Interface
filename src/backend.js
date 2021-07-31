@@ -1,14 +1,24 @@
 const { app, BrowserWindow, ipcMain, Tray, Menu, Notification, dialog } = require('electron');
+const os = require('os');
 const { giveFileGetBlock } = require('./parseDatablock/parser');
-const { createBlockSchema } = require('./knexActions');
+const storage = require('electron-json-storage');
 const knex = require('knex');
 const path = require('path');
 let tray = null;
 let dbOK = false;
 let dbData = {};
 let db;
+
+storage.setDataPath(os.tmpdir());
+let databasePersistance;
+let datablockPersistance;
+let plcPersistance;
+
 process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true';
 
+ipcMain.handle('checkDB',(event, data) => {
+  return dbOK;
+});
 
 
 // Database connection renderer process handler
@@ -56,8 +66,13 @@ ipcMain.on("openFile", (event, data) => {
     } else {
       console.log(file.filePaths);
       let all = giveFileGetBlock(file.filePaths[0]);
-      // console.log(all);
-      createBlockSchema(db, all);
+      // Save Parsed datablock in local file with json-storage
+      console.log(typeof(all));
+      storage.set('parsedDatablock', {block: all, name: file.filePaths[0]}, function (err) {
+        if(err){
+          throw err;
+        }
+      })
     }
   });
 });
@@ -101,7 +116,7 @@ const menuTemplate = [
 
 const createMainWindow = () => {
   const mainWindow = new BrowserWindow({
-    width: 1000,
+    width: 900,
     height: 600,
     webPreferences: {
       nodeIntegration: true,
@@ -209,6 +224,39 @@ try {
 
 // Database connection
 function connectToDB(data, event) {
+
+  storage.has('databaseStats', function (error, hasDatabaseStatsKey) {
+    if (error) throw error;
+
+    if (hasDatabaseStatsKey) {
+
+      storage.set('databaseStats', {
+        host: data.host,
+        user: data.user,
+        database: data.db,
+      }, function (error) {
+        if (error) throw error;
+      });
+      
+    } else {
+      console.log('There are no Database Stats');
+      storage.set('databaseStats', {
+        host: data.host,
+        user: data.user,
+        database: data.db,
+      }, function (error) {
+        if (error) throw error;
+      });
+    }
+  });
+
+  console.log(typeof ({
+    host: data.host,
+    user: data.user,
+    password: data.pass,
+    database: data.db,
+  }));
+
   db = knex({
     client: 'pg',
     connection: {
@@ -218,6 +266,10 @@ function connectToDB(data, event) {
       database: data.db,
     },
   });
+
+
+
+
 
   db.raw('select 1+1 as result').then(function () {
     // Here if the connection is valid

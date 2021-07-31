@@ -31,25 +31,33 @@
                 <h1 id="plcPort" class="statusArgs">PORT: -</h1>
                 <h1 id="plcSlot" class="statusArgs">SLOT: -</h1>
                 <h1 id="plcRack" class="statusArgs">RACK: -</h1>
+                <button onclick="checkPLC()" class="button">Check PLC</button>
             </div>
         </div>
         <div class="flex-items2">
             <div class="args">
-                <h1 class="title">Datablock Values</h1>
-                <div id="blockValues">
-                    <!-- <h1 class="statusArgs">-</h1> -->
+                <h1 class="title">Datablock Directory:</h1>
+                <div style="padding-top: 25px; padding-bottom: 25px;" >
+                    <span id="datablockName">-</span>
                 </div>
                 <button id="showAllVals" class="button">Click to show all values</button>
+                <button onclick="checkDatablock()" class="button">Check Datablock</button>
             </div>
         </div>
         <div class="args">
             <h1 class="title">Database</h1>
             <div>
-                <h1 id="dbName" class="statusArgs">Name: -</h1>
-                <h1 id="dbTable" class="statusArgs">Table: -</h1>
+                <h1 id="" class="statusArgs">Status:</h1>
+                <span id="dbStatus" class="" style="display: inline; font:bold">-</span>
+                <h1 id="" class="statusArgs">Host-IP:</h1>
+                <span id="dbHost">-</span>
+                <h1 id="" class="statusArgs">Database Name:</h1>
+                <span id="dbName">-</span>
+                <button onclick="checkDB()" class="button">Check Database</button>
             </div>
         </div>
     </div>
+    <script src="index.js"></script>
 </body>
 
 </html>

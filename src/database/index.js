@@ -1,4 +1,7 @@
 const { ipcRenderer } = require('electron');
+const os = require('os');
+const storage = require('electron-json-storage');
+storage.setDataPath(os.tmpdir());
 
 let host;
 let user;
@@ -10,21 +13,38 @@ let data = [];
 ipcRenderer.on('reply', (event, reply) => {
     console.log(reply);
 });
+
+
 ipcRenderer.on('dbOK', (event, reply) => {
-    console.log(reply);
+    // console.log(reply);
     if(reply[0]) {
         document.getElementById('dbStatus').innerHTML = 'Status: Connected';
         document.getElementById('dbStatus').style.color = 'Green';
         lock();
+        document.getElementById('host').value = reply[1].host;
+        document.getElementById('user').value = reply[1].user;
+        document.getElementById('password').value = reply[1].pass;
+        document.getElementById('database').value = reply[1].db;
     } else {
         document.getElementById('dbStatus').innerHTML = 'Status: Disconnected';
         document.getElementById('dbStatus').style.color = 'Red';
         unlock();
+        storage.has('databaseStats', function (err, hasDatabaseStatsKey) {
+            if (err) throw err;
+
+            if (hasDatabaseStatsKey) {
+                console.log('They are here');
+                let stats = storage.getSync('databaseStats');
+                // console.log(stats);
+                document.getElementById('host').value = stats.host;
+                document.getElementById('user').value = stats.user;
+                document.getElementById('password').value = '-';
+                document.getElementById('database').value = stats.database;
+            } else {
+                console.log('There isnt a database saved');
+            }
+        });
     }
-    document.getElementById('host').value = reply[1].host;
-    document.getElementById('user').value = reply[1].user;
-    document.getElementById('password').value = reply[1].pass;
-    document.getElementById('database').value = reply[1].db;
 });
 
 ipcRenderer.on('conn-valid', (event, reply) => {
@@ -40,7 +60,17 @@ ipcRenderer.on('conn-valid', (event, reply) => {
         document.getElementById('dbStatus').innerHTML = 'Status: Disconnected';
         document.getElementById('dbStatus').style.color = 'Red';
         unlock();
-        
+        storage.has('databaseStats', function (err, hasDatabaseStatsKey) {
+            if (err) throw err;
+
+            if (hasDatabaseStatsKey) {
+                console.log('They are here');
+                let stats = storage.getSync('databaseStats');
+                console.log(stats);
+            } else {
+                console.log('There isnt a database saved');
+            }
+        });
     }
 });
 
@@ -95,3 +125,18 @@ function checkEmpty(data) {
     }
     return true;
 }
+
+
+// function loadOld() {
+//     storage.has('databaseStats', function (err, hasDatabaseStatsKey) {
+//         if(err) throw err;
+
+//         if(hasDatabaseStatsKey) {
+//             console.log('They are here');
+//             let stats = storage.getSync('databaseStats');
+//             console.log(stats);
+//         } else {
+//             console.log('There isnt a database saved');
+//         }
+//     });
+// }
