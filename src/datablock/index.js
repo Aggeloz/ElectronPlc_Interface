@@ -16,3 +16,8 @@ ipcRenderer.on('isDBOk', (event, data) => {
 async function openDbSel() {
     ipcRenderer.send('openFile');
 }
+
+ipcRenderer.on('datablock', (event, data) => {
+    console.log(data);
+    document.getElementById('dbName').innerHTML = data.name;
+});

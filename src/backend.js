@@ -1,20 +1,20 @@
-const { app, BrowserWindow, ipcMain, Tray, Menu, Notification, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, Tray, Menu, Notification, dialog, globalShortcut } = require('electron');
 const os = require('os');
 const { giveFileGetBlock } = require('./parseDatablock/parser');
 const storage = require('electron-json-storage');
 const knex = require('knex');
 const path = require('path');
+// const nodes7 = require('nodes7');
+
 let tray = null;
 let dbOK = false;
 let dbData = {};
 let db;
 
 storage.setDataPath(os.tmpdir());
-let databasePersistance;
-let datablockPersistance;
-let plcPersistance;
-
 process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true';
+
+
 
 ipcMain.handle('checkDB',(event, data) => {
   return dbOK;
@@ -73,6 +73,7 @@ ipcMain.on("openFile", (event, data) => {
           throw err;
         }
       })
+      event.reply('datablock', { block: all, name: file.filePaths[0] });
     }
   });
 });
@@ -86,6 +87,13 @@ if (require('electron-squirrel-startup')) { // eslint-disable-line global-requir
 
 
 const menuTemplate = [
+  {
+    label: 'PLC Settings',
+    click: () => {
+      new Notification({ title: "PLC Settings", body: "Opening PLC Settings" }).show();
+      createPlcWindow();
+    }
+  },
   {
     label: 'Database Settings',
     click: () => {
@@ -121,13 +129,14 @@ const createMainWindow = () => {
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
+      devTools: true,
     }
   });
 
 
   mainWindow.loadFile(path.join(__dirname, '/mainPage/index.html'));
   mainWindow.removeMenu();
-  mainWindow.webContents.openDevTools();
+  // mainWindow.webContents.openDevTools();
   mainWindow.setResizable(false);
 };
 
@@ -147,6 +156,23 @@ const createDatabaseWindow = () => {
   databaseWindow.removeMenu();
   databaseWindow.webContents.openDevTools();
   databaseWindow.setResizable(false);
+};
+
+
+const createPlcWindow = () => {
+  const plcWindow = new BrowserWindow({
+    width: 800,
+    height: 400,
+    webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: false,
+    }
+  });
+  
+  plcWindow.loadFile(path.join(__dirname, '/plc/index.html'));
+  plcWindow.removeMenu();
+  plcWindow.webContents.openDevTools();
+  plcWindow.setResizable(false);
 };
 
 
@@ -191,6 +217,13 @@ app.on('ready', () => {
 
   const customMenu = Menu.buildFromTemplate(menuTemplate);
   Menu.setApplicationMenu(customMenu);
+
+  globalShortcut.register('Control+Shift+I', () => {
+    // When the user presses Ctrl + Shift + I, this function will get called
+    // You can modify this function to do other things, but if you just want
+    // to disable the shortcut, you can just return false
+    return true;
+  });
 
 });
 

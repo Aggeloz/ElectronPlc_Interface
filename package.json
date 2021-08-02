@@ -46,12 +46,12 @@
     }
   },
   "dependencies": {
-    "chart.js": "^3.4.1",
     "decimal.js": "^10.3.1",
     "electron-json-storage": "^4.5.0",
     "electron-reloader": "^1.2.1",
     "electron-squirrel-startup": "^1.0.0",
     "fs": "^0.0.1-security",
+    "highcharts": "^9.1.2",
     "knex": "^0.95.7",
     "nodes7": "^0.3.12",
     "pg": "^8.6.0"

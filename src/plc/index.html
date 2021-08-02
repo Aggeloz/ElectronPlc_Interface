@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="index.css">
+    <title>PLC Settings</title>
+</head>
+
+<body onload="">
+    <div>
+        <h1 class="title">PLC Settings</h1>
+    </div>
+    <div class="inputGroup">
+        <div class="bdInput">
+            <input id="CPUIP" name="CPU-IP" type="text" class="" value="192.168.1.1">
+            <label style="left: 170px;" for="CPU-IP">CPU IP -></label>
+        </div>
+        <div class="bdInput">
+            <input id="CPUPORT" name="CPU-PORT" type="number" value="102" class="blurred" min="0">
+            <label style="left: 170px;" for="CPU-PORT">CPU PORT -></label>
+        </div>
+        <div class="bdInput">
+            <input id="CPURACK" name="CPU-RACK" type="number" value="0" class="blurred" min="0">
+            <label style="left: 170px;" for="CPU-RACK">CPU RACK -></label>
+        </div>
+        <div class="bdInput">
+            <input id="CPUSLOT" name="CPU-SLOT" type="number" value="1" class="blurred" min="0">
+            <label style="left: 170px;" for="CPU-SLOT">CPU SLOT -></label>
+        </div>
+        <h1 id="dbStatus" class="title">Status:</h1>
+        <span id="plcStatus">-</span>
+    </div>
+
+    <div style="text-align: center; padding: 15px;">
+        <button id="connect" onclick="connectPLC();" class="button">Connect to PLC</button>
+        <button id="disconnect" onclick="disconnectPLC();" class="button">Disconnect from PLC</button>
+    </div>
+    <script src="index.js"></script>
+</body>
+
+</html>
