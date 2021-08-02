@@ -15,6 +15,8 @@ let dbOK = false;
 let datablockOK = false;
 let plcOK = false;
 
+let doneReading = false;
+let doneWriting = false;
 // app.commandLine.appendSwitch('remote-debugging-port', '8315');
 // app.commandLine.appendSwitch('host-rules', 'MAP * 127.0.0.1');
 
@@ -366,7 +368,7 @@ function connectToDB(data, event) {
 
 
 
-
+let dataBlocks;
 // --------------PLC CONNECTION----------------
 
 function connectPLC(data) {
@@ -384,14 +386,19 @@ function connectPLC(data) {
       storage.has('parsedDatablock', function (error, hasParsedBlock) {
         if (error) throw error;
         if (hasParsedBlock) {
-          let datablock = storage.getSync('parsedDatablock');
-          plc.setTranslationCB(function (tag) { return datablock.block[tag]; });
-          console.log(datablock.block);
-          plc.addItems(String(datablock.block.SUNENERGYG2));
-          plc.readAllItems(checkValues);
+          dataBlocks = storage.getSync('parsedDatablock');
+          // console.log(dataBlocks);
         } else {
           console.log('No parsed Datablock');
         }
+        plc.setTranslationCB(function (tag) { return dataBlocks.block[tag]; });
+        console.log(dataBlocks);
+        for (let datablockValue in dataBlocks.block) {
+          console.log(datablockValue);
+          console.log(datablockValue.toString());
+          plc.addItems(datablockValue.toString());
+        }
+        plc.readAllItems(checkValues);
       })
     } else {
       plcOK = false;
