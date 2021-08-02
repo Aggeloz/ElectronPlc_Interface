@@ -1,19 +1,25 @@
-const { app, BrowserWindow, ipcMain, Tray, Menu, Notification, dialog, globalShortcut } = require('electron');
+const { app, BrowserWindow, ipcMain, Tray, Menu, Notification, dialog, globalShortcut,  } = require('electron');
 const os = require('os');
 const { giveFileGetBlock } = require('./parseDatablock/parser');
 const storage = require('electron-json-storage');
 const knex = require('knex');
 const path = require('path');
-// const nodes7 = require('nodes7');
-
+// const { connectPLC, disconnectPLC, plcConnected } = require('./plcConnection');
+var nodes7 = require('nodes7');
+var plc = new nodes7;
 let tray = null;
-let dbOK = false;
 let dbData = {};
 let db;
 
+let dbOK = false;
+let datablockOK = false;
+let plcOK = false;
+
+// app.commandLine.appendSwitch('remote-debugging-port', '8315');
+// app.commandLine.appendSwitch('host-rules', 'MAP * 127.0.0.1');
+
 storage.setDataPath(os.tmpdir());
 process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true';
-
 
 
 ipcMain.handle('checkDB',(event, data) => {
@@ -22,6 +28,20 @@ ipcMain.handle('checkDB',(event, data) => {
 
 
 // Database connection renderer process handler
+ipcMain.on("connectPLC", async (event, data) => {
+  connectPLC(data);
+});
+
+
+
+ipcMain.on("disconnectPLC", (event, data) => {
+  disconnectPLC();
+});
+
+
+
+
+
 ipcMain.on("checkDBOK", (event, data) => {
   event.reply("isDBOk", dbOK);
 });
@@ -116,6 +136,12 @@ const menuTemplate = [
       new Notification({ title: "Charts", body: "Opening Charting Page" }).show()
     }
   },
+  {
+    label: 'Console',
+    click: () => {
+      // createConsole();
+    }
+  },
 ];
 
 
@@ -142,6 +168,27 @@ const createMainWindow = () => {
 
 
 
+const createConsole = () => {
+  const mainWindow = new BrowserWindow({
+    width: 1900,
+    height: 1000,
+    webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: false,
+      devTools: true,
+    }
+  });
+
+
+  mainWindow.loadURL('chrome://inspect/#devices')
+  // mainWindow.open('brave://inspect/#devices');
+  mainWindow.removeMenu();
+  mainWindow.webContents.openDevTools();
+  mainWindow.setResizable(false);
+};
+
+
+
 const createDatabaseWindow = () => {
   const databaseWindow = new BrowserWindow({
     width: 800,
@@ -154,7 +201,7 @@ const createDatabaseWindow = () => {
   
   databaseWindow.loadFile(path.join(__dirname, '/database/index.html'));
   databaseWindow.removeMenu();
-  databaseWindow.webContents.openDevTools();
+  // databaseWindow.webContents.openDevTools();
   databaseWindow.setResizable(false);
 };
 
@@ -171,7 +218,7 @@ const createPlcWindow = () => {
   
   plcWindow.loadFile(path.join(__dirname, '/plc/index.html'));
   plcWindow.removeMenu();
-  plcWindow.webContents.openDevTools();
+  // plcWindow.webContents.openDevTools();
   plcWindow.setResizable(false);
 };
 
@@ -199,7 +246,7 @@ const createDatablockSelWindow = () => {
   
   dBlockWindow.loadFile(path.join(__dirname, '/datablock/index.html'));
   dBlockWindow.removeMenu();
-  dBlockWindow.webContents.openDevTools();
+  // dBlockWindow.webContents.openDevTools();
   dBlockWindow.setResizable(false);
 
   // const customMenu1 = Menu.buildFromTemplate(dbMenu);
@@ -218,12 +265,10 @@ app.on('ready', () => {
   const customMenu = Menu.buildFromTemplate(menuTemplate);
   Menu.setApplicationMenu(customMenu);
 
-  globalShortcut.register('Control+Shift+I', () => {
-    // When the user presses Ctrl + Shift + I, this function will get called
-    // You can modify this function to do other things, but if you just want
-    // to disable the shortcut, you can just return false
-    return true;
-  });
+  // globalShortcut.register('Control+Shift+I', () => {
+  //   createMainWindow.webContents.openDevTools()
+  //   return true;
+  // });
 
 });
 
@@ -322,13 +367,50 @@ function connectToDB(data, event) {
 
 
 
+// --------------PLC CONNECTION----------------
+
+function connectPLC(data) {
+  plc.initiateConnection(data, connected); // Initiate connection with the plc
+  function connected(err) {
+    if (typeof (err) !== 'undefined') {
+      // We have an error. Maybe the PLC is not reachable
+      console.log(err);
+      plcOK = false;
+      // alert('Connection to PLC Failed!', err);
+    }
+    if (plc.isoConnectionState === 4) {
+      plcOK = true;
+      console.log('Plc Connected', plcOK);
+      storage.has('parsedDatablock', function (error, hasParsedBlock) {
+        if (error) throw error;
+        if (hasParsedBlock) {
+          let datablock = storage.getSync('parsedDatablock');
+          plc.setTranslationCB(function (tag) { return datablock.block[tag]; });
+          console.log(datablock.block);
+          plc.addItems(String(datablock.block.SUNENERGYG2));
+          plc.readAllItems(checkValues);
+        } else {
+          console.log('No parsed Datablock');
+        }
+      })
+    } else {
+      plcOK = false;
+    }
+  }
+}
+
+function disconnectPLC() {
+  plc.dropConnection();
+  plcOK = false;
+  console.log('Plc Disconnected', !plcOK);
+}
 
 
 
-  // db
-  //   .select('*')
-  //   .from("TestTable")
-  //   .then(function (users) {
-  //     console.log(users);
-  //   })
-  //   .catch(err => console.log(err.stack, "Here"));
+function checkValues(anythingBad, values) {
+  if (anythingBad) { console.log("SOMETHING WENT WRONG READING VALUES!!!!"); }
+  // console.log(values);
+  console.log(values);
+  doneReading = true;
+  if (doneWriting) { process.exit(); }
+}
