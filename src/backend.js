@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, Tray, Menu, Notification, dialog, globalShortcut,  } = require('electron');
+const { app, BrowserWindow, ipcMain, Tray, Menu, Notification, dialog, globalShortcut, } = require('electron');
 const os = require('os');
 const { giveFileGetBlock } = require('./parseDatablock/parser');
 const storage = require('electron-json-storage');
@@ -24,10 +24,6 @@ storage.setDataPath(os.tmpdir());
 process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true';
 
 
-ipcMain.handle('checkDB',(event, data) => {
-  return dbOK;
-});
-
 
 // Database connection renderer process handler
 ipcMain.on("connectPLC", async (event, data) => {
@@ -35,18 +31,47 @@ ipcMain.on("connectPLC", async (event, data) => {
 });
 
 
+ipcMain.on("initPLC", async (event, data) => {
+  initPLC();
+});
 
+
+// Create window to show all values from the Datablock
+ipcMain.on("showDBValues", async (event, data) => {
+  // connectPLC(data);
+  console.log(storage.getSync('parsedDatablock').block);
+  createValuesWindow();
+});
+
+
+// Handle PLC Disconnection
 ipcMain.on("disconnectPLC", (event, data) => {
   disconnectPLC();
 });
 
+// Handle PLC checking in main window
+ipcMain.on("checkPLC", (event, data) => {
+  event.reply('plcCheck', plcOK);
+});
 
 
 
+
+// Handle Database checking in main window
+ipcMain.handle('checkDB', (event, data) => {
+  return dbOK;
+});
 
 ipcMain.on("checkDBOK", (event, data) => {
   event.reply("isDBOk", dbOK);
 });
+
+ipcMain.on("dbOK", (event, data) => {
+  // Checks DB connection status
+  event.reply("dbOK", [dbOK, dbData]);
+});
+
+
 
 
 // Database connection renderer process handler
@@ -56,7 +81,7 @@ ipcMain.on("dbConnection", (event, data) => {
   connectToDB(data, event);
 });
 
-
+// Handle Database disconnection
 ipcMain.on("disconnect", (event, data) => {
   // Destroy DB connection
   db.destroy();
@@ -65,10 +90,8 @@ ipcMain.on("disconnect", (event, data) => {
 });
 
 
-ipcMain.on("dbOK", (event, data) => {
-  // Checks DB connection status
-  event.reply("dbOK",[dbOK, dbData]);
-});
+
+
 // Open datablock file 
 ipcMain.on("openFile", (event, data) => {
   let dialogOptions = {
@@ -79,7 +102,7 @@ ipcMain.on("openFile", (event, data) => {
     ],
   };
 
-// Get Datablock file
+  // Get Datablock file
   dialog.showOpenDialog(
     dialogOptions
   ).then((file) => {
@@ -89,9 +112,9 @@ ipcMain.on("openFile", (event, data) => {
       console.log(file.filePaths);
       let all = giveFileGetBlock(file.filePaths[0]);
       // Save Parsed datablock in local file with json-storage
-      console.log(typeof(all));
-      storage.set('parsedDatablock', {block: all, name: file.filePaths[0]}, function (err) {
-        if(err){
+      console.log(typeof (all));
+      storage.set('parsedDatablock', { block: all, name: file.filePaths[0] }, function (err) {
+        if (err) {
           throw err;
         }
       })
@@ -169,6 +192,25 @@ const createMainWindow = () => {
 };
 
 
+const createValuesWindow = () => {
+  const mainWindow = new BrowserWindow({
+    width: 900,
+    height: 600,
+    webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: false,
+      devTools: true,
+    }
+  });
+
+
+  mainWindow.loadFile(path.join(__dirname, '/mainPage/values.html'));
+  mainWindow.removeMenu();
+  mainWindow.webContents.openDevTools();
+  mainWindow.setResizable(false);
+};
+
+
 
 const createConsole = () => {
   const mainWindow = new BrowserWindow({
@@ -200,7 +242,7 @@ const createDatabaseWindow = () => {
       contextIsolation: false,
     }
   });
-  
+
   databaseWindow.loadFile(path.join(__dirname, '/database/index.html'));
   databaseWindow.removeMenu();
   // databaseWindow.webContents.openDevTools();
@@ -217,7 +259,7 @@ const createPlcWindow = () => {
       contextIsolation: false,
     }
   });
-  
+
   plcWindow.loadFile(path.join(__dirname, '/plc/index.html'));
   plcWindow.removeMenu();
   // plcWindow.webContents.openDevTools();
@@ -245,7 +287,7 @@ const createDatablockSelWindow = () => {
   //   },
   // ];
 
-  
+
   dBlockWindow.loadFile(path.join(__dirname, '/datablock/index.html'));
   dBlockWindow.removeMenu();
   // dBlockWindow.webContents.openDevTools();
@@ -317,7 +359,7 @@ function connectToDB(data, event) {
       }, function (error) {
         if (error) throw error;
       });
-      
+
     } else {
       console.log('There are no Database Stats');
       storage.set('databaseStats', {
@@ -383,23 +425,6 @@ function connectPLC(data) {
     if (plc.isoConnectionState === 4) {
       plcOK = true;
       console.log('Plc Connected', plcOK);
-      storage.has('parsedDatablock', function (error, hasParsedBlock) {
-        if (error) throw error;
-        if (hasParsedBlock) {
-          dataBlocks = storage.getSync('parsedDatablock');
-          // console.log(dataBlocks);
-        } else {
-          console.log('No parsed Datablock');
-        }
-        plc.setTranslationCB(function (tag) { return dataBlocks.block[tag]; });
-        console.log(dataBlocks);
-        for (let datablockValue in dataBlocks.block) {
-          console.log(datablockValue);
-          console.log(datablockValue.toString());
-          plc.addItems(datablockValue.toString());
-        }
-        plc.readAllItems(checkValues);
-      })
     } else {
       plcOK = false;
     }
@@ -411,6 +436,67 @@ function disconnectPLC() {
   plcOK = false;
   console.log('Plc Disconnected', !plcOK);
 }
+
+
+
+
+
+
+
+function initPLC() {
+  storage.has('parsedDatablock', function (error, hasParsedBlock) {
+    if (error) throw error;
+    if (hasParsedBlock) {
+      dataBlocks = storage.getSync('parsedDatablock');
+      // console.log(dataBlocks);
+    } else {
+      console.log('No parsed Datablock');
+    }
+    plc.setTranslationCB(function (tag) { return dataBlocks.block[tag]; });
+    console.log(dataBlocks);
+    for (let datablockValue in dataBlocks.block) {
+      console.log(datablockValue);
+      console.log(datablockValue.toString());
+      plc.addItems(datablockValue.toString());
+    }
+    readLoop();
+    // plc.readAllItems(checkValues);
+  })
+}
+let timer = 1000;
+let stopReading = false;
+function readLoop() {
+
+  
+  plc.readAllItems((anythingBad, values) => {
+    if (anythingBad) { console.log("SOMETHING WENT WRONG READING VALUES!!!!"); }
+    // console.log(values);
+    console.log(values);
+    console.log('This is Main Valve', values.Valve);
+    if (values.Valve === false) {
+      nextTimer = 1000;
+    } else if (values.Valve === true) {
+      nextTimer = 200;
+    }
+    if(stopReading) {
+      return 0;
+    }
+    doneReading = true;
+    if (doneWriting) { process.exit(); }
+    setTimeout(readLoop, nextTimer)
+  });
+
+  
+}
+
+
+
+
+
+
+
+
+
 
 
 

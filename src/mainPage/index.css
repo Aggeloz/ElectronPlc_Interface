@@ -93,3 +93,8 @@ input::-webkit-outer-spin-button, input::-webkit-inner-spin-button {
     -webkit-appearance: none;
     margin: 0;
 }
+
+#listValues {
+    text-align: center;
+    list-style-type: none;
+}

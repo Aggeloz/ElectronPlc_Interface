@@ -47,3 +47,17 @@ function checkDatablock() {
         }
     })
 }
+
+
+function showValues() {
+    ipcRenderer.send('showDBValues');
+}
+
+
+function checkPLC() {
+    ipcRenderer.send('checkPLC');
+}
+
+function initPLC() {
+    ipcRenderer.send('initPLC');
+}

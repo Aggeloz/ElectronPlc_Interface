@@ -17,7 +17,7 @@
                 <div>
                     <h1 class="title">Connected</h1>
                 </div>
-                <button class="button">Start Connection</button>
+                <button onclick="initPLC();" class="button">Start Connection</button>
                 <button class="button">Stop Connection</button>
                 <button class="button">Toggle Data Insert</button>
             </div>
@@ -40,7 +40,7 @@
                 <div style="padding-top: 25px; padding-bottom: 25px;" >
                     <span id="datablockName">-</span>
                 </div>
-                <button id="showAllVals" class="button">Click to show all values</button>
+                <button onclick="showValues();" id="showAllVals" class="button">Click to show all values</button>
                 <button onclick="checkDatablock()" class="button">Check Datablock</button>
             </div>
         </div>
