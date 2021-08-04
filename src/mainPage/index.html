@@ -18,7 +18,7 @@
                     <h1 class="title">Connected</h1>
                 </div>
                 <button onclick="initPLC();" class="button">Start Connection</button>
-                <button class="button">Stop Connection</button>
+                <button onclick="stopPLC();" class="button">Stop Connection</button>
                 <button class="button">Toggle Data Insert</button>
             </div>
         </div>
@@ -27,11 +27,15 @@
         <div class="flex-items2">
             <div class="args">
                 <h1 class="title">PLC</h1>
-                <h1 id="plcIp" class="statusArgs">IP: -</h1>
-                <h1 id="plcPort" class="statusArgs">PORT: -</h1>
-                <h1 id="plcSlot" class="statusArgs">SLOT: -</h1>
-                <h1 id="plcRack" class="statusArgs">RACK: -</h1>
-                <button onclick="checkPLC()" class="button">Check PLC</button>
+                <h1 class="statusArgs">IP:</h1>
+                <span id="plcIp" >-</span>
+                <h1 class="statusArgs">PORT:</h1>
+                <span id="plcPort">-</span>
+                <h1 class="statusArgs">SLOT:</h1>
+                <span id="plcSlot">-</span>
+                <h1 class="statusArgs">RACK:</h1>
+                <span id="plcRack">-</span>
+                <button onclick="getPLC()" class="button">Check PLC</button>
             </div>
         </div>
         <div class="flex-items2">

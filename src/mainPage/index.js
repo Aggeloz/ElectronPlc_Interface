@@ -48,6 +48,18 @@ function checkDatablock() {
     })
 }
 
+function getPLC() {
+    storage.has('plcStats', function(err, hasPlcStats) {
+        if (err) throw err;
+        if(hasPlcStats) {
+            let stats = storage.getSync('plcStats')
+            document.getElementById('plcIp').innerHTML = stats.plc.host;
+            document.getElementById('plcPort').innerHTML = stats.plc.port;
+            document.getElementById('plcRack').innerHTML = stats.plc.rack;
+            document.getElementById('plcSlot').innerHTML = stats.plc.slot;
+        }
+    })
+}
 
 function showValues() {
     ipcRenderer.send('showDBValues');
@@ -60,4 +72,7 @@ function checkPLC() {
 
 function initPLC() {
     ipcRenderer.send('initPLC');
+}
+function stopPLC() {
+    ipcRenderer.send('stopPLC');
 }

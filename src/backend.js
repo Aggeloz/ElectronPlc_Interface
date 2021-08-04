@@ -17,6 +17,9 @@ let plcOK = false;
 
 let doneReading = false;
 let doneWriting = false;
+let timer = 1000;
+let stopReading = false;
+
 // app.commandLine.appendSwitch('remote-debugging-port', '8315');
 // app.commandLine.appendSwitch('host-rules', 'MAP * 127.0.0.1');
 
@@ -27,12 +30,16 @@ process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true';
 
 // Database connection renderer process handler
 ipcMain.on("connectPLC", async (event, data) => {
-  connectPLC(data);
+  connectPLC(data, event);
 });
 
 
 ipcMain.on("initPLC", async (event, data) => {
   initPLC();
+});
+
+ipcMain.on("stopPLC", async (event, data) => {
+  stopReadingPLC();
 });
 
 
@@ -175,8 +182,8 @@ const menuTemplate = [
 
 const createMainWindow = () => {
   const mainWindow = new BrowserWindow({
-    width: 900,
-    height: 600,
+    width: 1050,
+    height: 650,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
@@ -187,7 +194,7 @@ const createMainWindow = () => {
 
   mainWindow.loadFile(path.join(__dirname, '/mainPage/index.html'));
   mainWindow.removeMenu();
-  // mainWindow.webContents.openDevTools();
+  mainWindow.webContents.openDevTools();
   mainWindow.setResizable(false);
 };
 
@@ -227,7 +234,7 @@ const createConsole = () => {
   mainWindow.loadURL('chrome://inspect/#devices')
   // mainWindow.open('brave://inspect/#devices');
   mainWindow.removeMenu();
-  mainWindow.webContents.openDevTools();
+  // mainWindow.webContents.openDevTools();
   mainWindow.setResizable(false);
 };
 
@@ -262,7 +269,7 @@ const createPlcWindow = () => {
 
   plcWindow.loadFile(path.join(__dirname, '/plc/index.html'));
   plcWindow.removeMenu();
-  // plcWindow.webContents.openDevTools();
+  plcWindow.webContents.openDevTools();
   plcWindow.setResizable(false);
 };
 
@@ -413,7 +420,10 @@ function connectToDB(data, event) {
 let dataBlocks;
 // --------------PLC CONNECTION----------------
 
-function connectPLC(data) {
+function connectPLC(data, event) {
+  storage.set('plcStats', {plc: data}, function(err) {
+    if(err) throw err;
+  });
   plc.initiateConnection(data, connected); // Initiate connection with the plc
   function connected(err) {
     if (typeof (err) !== 'undefined') {
@@ -425,7 +435,25 @@ function connectPLC(data) {
     if (plc.isoConnectionState === 4) {
       plcOK = true;
       console.log('Plc Connected', plcOK);
+      storage.has('parsedDatablock', function (error, hasParsedBlock) {
+        if (error) throw error;
+        if (hasParsedBlock) {
+          dataBlocks = storage.getSync('parsedDatablock');
+          // console.log(dataBlocks);
+        } else {
+          console.log('No parsed Datablock');
+        }
+        plc.setTranslationCB(function (tag) { return dataBlocks.block[tag]; });
+        console.log(dataBlocks);
+        for (let datablockValue in dataBlocks.block) {
+          console.log(datablockValue);
+          console.log(datablockValue.toString());
+          plc.addItems(datablockValue.toString());
+        }
+      })
+      event.reply('plc-valid', true);
     } else {
+      event.reply('plc-valid', false);
       plcOK = false;
     }
   }
@@ -440,70 +468,46 @@ function disconnectPLC() {
 
 
 
+let testTimer = 0;
 
 
 
 function initPLC() {
-  storage.has('parsedDatablock', function (error, hasParsedBlock) {
-    if (error) throw error;
-    if (hasParsedBlock) {
-      dataBlocks = storage.getSync('parsedDatablock');
-      // console.log(dataBlocks);
-    } else {
-      console.log('No parsed Datablock');
-    }
-    plc.setTranslationCB(function (tag) { return dataBlocks.block[tag]; });
-    console.log(dataBlocks);
-    for (let datablockValue in dataBlocks.block) {
-      console.log(datablockValue);
-      console.log(datablockValue.toString());
-      plc.addItems(datablockValue.toString());
-    }
-    readLoop();
-    // plc.readAllItems(checkValues);
-  })
+  readLoop();
 }
-let timer = 1000;
-let stopReading = false;
+
 function readLoop() {
 
-  
   plc.readAllItems((anythingBad, values) => {
     if (anythingBad) { console.log("SOMETHING WENT WRONG READING VALUES!!!!"); }
-    // console.log(values);
     console.log(values);
+    console.log(timer / 1000);
     console.log('This is Main Valve', values.Valve);
     if (values.Valve === false) {
       nextTimer = 1000;
     } else if (values.Valve === true) {
+      sendDatatoDB(values);
       nextTimer = 200;
     }
-    if(stopReading) {
+    if (stopReading) {
       return 0;
     }
     doneReading = true;
     if (doneWriting) { process.exit(); }
-    setTimeout(readLoop, nextTimer)
+    testTimer = setTimeout(readLoop, nextTimer)
   });
+}
 
-  
+function stopReadingPLC() {
+  clearInterval(testTimer);
+  testTimer = 0;
+  console.log('Stoped reading!');
 }
 
 
 
 
 
-
-
-
-
-
-
-
-function checkValues(anythingBad, values) {
-  if (anythingBad) { console.log("SOMETHING WENT WRONG READING VALUES!!!!"); }
-  // console.log(values);
-  console.log(values);
-  doneReading = true;
-  if (doneWriting) { process.exit(); }
+function sendDatatoDB(values) {
+  db.
 }
