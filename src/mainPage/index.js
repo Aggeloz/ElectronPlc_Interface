@@ -76,3 +76,16 @@ function initPLC() {
 function stopPLC() {
     ipcRenderer.send('stopPLC');
 }
+
+ipcRenderer.on('noDBConnection', function (event, data) {
+    alert('There is no connection to a Database, please disconnect the PLC then connect to a Database and try again!');
+});
+
+ipcRenderer.on('noDatablock', function (event, data) {
+    alert('There is no Datablock, please disconnect the PLC then pick a Datablock and try again!');
+});
+
+ipcRenderer.on('noTable', function (event, data) {
+    alert('There is no Table in the Database, talk to the Database Admin! (aggelos100vo@gmail.com)');
+});
+

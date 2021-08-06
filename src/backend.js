@@ -34,8 +34,18 @@ ipcMain.on("connectPLC", async (event, data) => {
 });
 
 
+
+// Delete datablock local storage
+ipcMain.on("deleteBlock", async (event, data) => {
+  storage.remove('parsedDatablock', function (err) {
+    if (err) throw err;
+  })
+});
+
+
 ipcMain.on("initPLC", async (event, data) => {
-  initPLC();
+  // initPLC(event);
+  checkForTable(event);
 });
 
 ipcMain.on("stopPLC", async (event, data) => {
@@ -421,8 +431,8 @@ let dataBlocks;
 // --------------PLC CONNECTION----------------
 
 function connectPLC(data, event) {
-  storage.set('plcStats', {plc: data}, function(err) {
-    if(err) throw err;
+  storage.set('plcStats', { plc: data }, function (err) {
+    if (err) throw err;
   });
   plc.initiateConnection(data, connected); // Initiate connection with the plc
   function connected(err) {
@@ -435,22 +445,8 @@ function connectPLC(data, event) {
     if (plc.isoConnectionState === 4) {
       plcOK = true;
       console.log('Plc Connected', plcOK);
-      storage.has('parsedDatablock', function (error, hasParsedBlock) {
-        if (error) throw error;
-        if (hasParsedBlock) {
-          dataBlocks = storage.getSync('parsedDatablock');
-          // console.log(dataBlocks);
-        } else {
-          console.log('No parsed Datablock');
-        }
-        plc.setTranslationCB(function (tag) { return dataBlocks.block[tag]; });
-        console.log(dataBlocks);
-        for (let datablockValue in dataBlocks.block) {
-          console.log(datablockValue);
-          console.log(datablockValue.toString());
-          plc.addItems(datablockValue.toString());
-        }
-      })
+
+
       event.reply('plc-valid', true);
     } else {
       event.reply('plc-valid', false);
@@ -472,42 +468,98 @@ let testTimer = 0;
 
 
 
-function initPLC() {
-  readLoop();
-}
-
-function readLoop() {
-
-  plc.readAllItems((anythingBad, values) => {
-    if (anythingBad) { console.log("SOMETHING WENT WRONG READING VALUES!!!!"); }
-    console.log(values);
-    console.log(timer / 1000);
-    console.log('This is Main Valve', values.Valve);
-    if (values.Valve === false) {
-      nextTimer = 1000;
-    } else if (values.Valve === true) {
-      sendDatatoDB(values);
-      nextTimer = 200;
+function initPLC(event) {
+  storage.has('parsedDatablock', function (error, hasParsedBlock) {
+    if (error) throw error;
+    if (hasParsedBlock) {
+      dataBlocks = storage.getSync('parsedDatablock');
+      // console.log(dataBlocks);
+      plc.setTranslationCB(function (tag) { return dataBlocks.block[tag]; });
+      console.log(dataBlocks);
+      for (let datablockValue in dataBlocks.block) {
+        console.log(datablockValue);
+        // console.log(datablockValue.toString());
+        plc.addItems(datablockValue);
+        // plc.addItems(datablockValue.toString());
+        // readLoop();
+      }
+      setTimeout(readLoop, 5000);
+      let oof = 0;
+      setInterval(() => {console.log("Seconds", oof++);}, 1000)
+    } else {
+      console.log('No parsed Datablock');
+      event.reply('noDatablock')
     }
-    if (stopReading) {
-      return 0;
-    }
-    doneReading = true;
-    if (doneWriting) { process.exit(); }
-    testTimer = setTimeout(readLoop, nextTimer)
   });
 }
 
+
+let nextTimer = 1000;
+let offTimer = 0;
+
+
+function readLoop() {
+  setTimeout(() => {
+
+    plc.readAllItems((badValue, values) => {
+      if(badValue) {
+        console.log('SOMETHING WENT WRONG READING A VALUE');
+      }
+      console.log(values);
+      console.log('Main valve is', values.Valve);
+      console.log('Timer', nextTimer);
+      if (values.Valve === true) {
+        nextTimer = 200
+      } else {
+        nextTimer = 1000
+      }
+
+    })
+    
+    readLoop();  // set up the next tick
+  }, nextTimer);
+}
+
+
+
 function stopReadingPLC() {
-  clearInterval(testTimer);
-  testTimer = 0;
+  clearInterval(offTimer);
+  offTimer = 0;
   console.log('Stoped reading!');
 }
 
 
 
+function checkForTable(event) {
+  try {
+    db.schema.hasTable('values').then(function (exists) {
+      if (!exists) {
+        // return knex.schema.createTable('users', function (t) {
+        //   t.increments('id').primary();
+        //   t.string('first_name', 100);
+        //   t.string('last_name', 100);
+        //   t.text('bio');
+        // });
+        event.reply('noTable')
+        console.log('The Table is missing!');
+
+      } else {
+        console.log('Table is here!');
+        initPLC(event);
+      }
+    });
+  } catch (err) {
+    console.log('Error Here:', err);
+    event.reply('noDBConnection');
+  }
+}
 
 
 function sendDatatoDB(values) {
-  db.
 }
+
+
+
+
+
+

@@ -1,6 +1,6 @@
 const { ipcRenderer } = require('electron');
 
-checkDB();
+// checkDB();
 async function checkDB() {
     ipcRenderer.send('checkDBOK');
 }
@@ -12,7 +12,10 @@ ipcRenderer.on('isDBOk', (event, data) => {
     } else {
         document.getElementById('openFile').disabled = false;
     }
-})
+});
+
+
+
 async function openDbSel() {
     ipcRenderer.send('openFile');
 }
@@ -21,3 +24,7 @@ ipcRenderer.on('datablock', (event, data) => {
     console.log(data);
     document.getElementById('dbName').innerHTML = data.name;
 });
+
+function deleteBlock() {
+    ipcRenderer.send('deleteBlock');
+}
