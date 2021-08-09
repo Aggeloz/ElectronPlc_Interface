@@ -72,17 +72,51 @@ function checkPLC() {
 
 function initPLC() {
     ipcRenderer.send('initPLC');
+    setTimeout(() => { ipcRenderer.send('checkAppStatus', 1)}, 500);
 }
 function stopPLC() {
     ipcRenderer.send('stopPLC');
+    setTimeout(() => { ipcRenderer.send('checkAppStatus', 0) }, 500);
+
+}
+function toggleInsert() {
+    ipcRenderer.send('toggleInsert');
+    setTimeout(() => { ipcRenderer.send('checkInsert');}, 500);
 }
 
 ipcRenderer.on('noDBConnection', function (event, data) {
     alert('There is no connection to a Database, please disconnect the PLC then connect to a Database and try again!');
 });
 
+ipcRenderer.on('appStatusCheck', function (event, data) {
+    if (data[0] && data[1] === 1) {
+        document.getElementById('appStatus').innerHTML = "Connected";
+        document.getElementById('appStatus').style.color = "Green";
+    } else if (!data[0] && data[1] === 1) {
+        document.getElementById('appStatus').innerHTML = "Connection Failed";
+        document.getElementById('appStatus').style.color = "Red";
+    }
+
+    if (data[0] === false && data[1] === 0) {
+        document.getElementById('appStatus').innerHTML = "Manually Stopped";
+        document.getElementById('appStatus').style.color = "Red";
+    } else if (data[0] && data[1] === 0) {
+
+    }
+});
+
 ipcRenderer.on('noDatablock', function (event, data) {
     alert('There is no Datablock, please disconnect the PLC then pick a Datablock and try again!');
+});
+
+ipcRenderer.on('insertCheck', function (event, data) {
+    if (data) {
+        document.getElementById('dataStatus').innerHTML = 'Sending';
+        // document.getElementById('dataStatus').style.color = 'Green';
+    } else {
+        document.getElementById('dataStatus').innerHTML = 'Not sending';
+        // document.getElementById('dataStatus').style.color = '';
+    }
 });
 
 ipcRenderer.on('noTable', function (event, data) {

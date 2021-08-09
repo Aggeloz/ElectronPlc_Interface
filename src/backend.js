@@ -4,6 +4,7 @@ const { giveFileGetBlock } = require('./parseDatablock/parser');
 const storage = require('electron-json-storage');
 const knex = require('knex');
 const path = require('path');
+require('./date.format');
 // const { connectPLC, disconnectPLC, plcConnected } = require('./plcConnection');
 var nodes7 = require('nodes7');
 var plc = new nodes7;
@@ -14,6 +15,8 @@ let db;
 let dbOK = false;
 let datablockOK = false;
 let plcOK = false;
+let toggleInsert = false;
+let appConnection = false;
 
 let doneReading = false;
 let doneWriting = false;
@@ -33,6 +36,27 @@ ipcMain.on("connectPLC", async (event, data) => {
   connectPLC(data, event);
 });
 
+// Database connection renderer process handler
+ipcMain.on("checkAppStatus", async (event, data) => {
+  if(data === 1) {
+    event.reply('appStatusCheck', [appConnection, 1]);
+  } else {
+    event.reply('appStatusCheck', [appConnection, 0]);
+  }
+});
+
+
+
+
+// Toggle DB insert
+ipcMain.on("toggleInsert", async (event, data) => {
+  toggleInsert = !toggleInsert;
+});
+// Check DB insert state
+ipcMain.on("checkInsert", async (event, data) => {
+  event.reply('insertCheck', toggleInsert);
+});
+
 
 
 // Delete datablock local storage
@@ -50,6 +74,7 @@ ipcMain.on("initPLC", async (event, data) => {
 
 ipcMain.on("stopPLC", async (event, data) => {
   stopReadingPLC();
+  appConnection = false;
 });
 
 
@@ -483,9 +508,10 @@ function initPLC(event) {
         // plc.addItems(datablockValue.toString());
         // readLoop();
       }
-      setTimeout(readLoop, 5000);
+      appConnection = true;
+      setTimeout(readLoop, 500);
       let oof = 0;
-      setInterval(() => {console.log("Seconds", oof++);}, 1000)
+      // setInterval(() => {console.log("Seconds", oof++);}, 1000);
     } else {
       console.log('No parsed Datablock');
       event.reply('noDatablock')
@@ -499,23 +525,24 @@ let offTimer = 0;
 
 
 function readLoop() {
-  setTimeout(() => {
+  offTimer = setTimeout(() => {
 
     plc.readAllItems((badValue, values) => {
-      if(badValue) {
+      if (badValue) {
         console.log('SOMETHING WENT WRONG READING A VALUE');
       }
-      console.log(values);
+      // console.log(values);
       console.log('Main valve is', values.Valve);
       console.log('Timer', nextTimer);
       if (values.Valve === true) {
         nextTimer = 200
+        sendDatatoDB(values);
       } else {
         nextTimer = 1000
       }
 
     })
-    
+
     readLoop();  // set up the next tick
   }, nextTimer);
 }
@@ -556,6 +583,54 @@ function checkForTable(event) {
 
 
 function sendDatatoDB(values) {
+  if (toggleInsert) {
+    let now = new Date();
+    // console.log(values);
+    db('values').insert(
+      {
+        VALVE1: values.Valve1,
+        VALVE2: values.Valve2,
+        VALVE3: values.Valve3,
+        VALVE4: values.Valve4,
+        VALVE5: values.Valve5,
+        VALVE6: values.Valve6,
+        VALVE7: values.Valve7,
+        VALVE8: values.Valve8,
+        VALVE: values.Valve,
+        PH: values.PH,
+        PH1: values.PH1,
+        PH2: values.PH2,
+        PHV1: values.PHV1,
+        PHV2: values.PHV2,
+        PHV3: values.PHV3,
+        PHV4: values.PHV4,
+        PHV5: values.PHV5,
+        PHV6: values.PHV6,
+        PHV7: values.PHV7,
+        PHV8: values.PHV8,
+        EC: values.EC,
+        EC1: values.EC1,
+        EC2: values.EC2,
+        ECV1: values.ECV1,
+        ECV2: values.ECV2,
+        ECV3: values.ECV3,
+        ECV4: values.ECV4,
+        ECV5: values.ECV5,
+        ECV6: values.ECV6,
+        ECV7: values.ECV7,
+        ECV8: values.ECV8,
+        FRESHWATERQ: values.FRESHWATERQ,
+        TFRQ: values.TFRQ,
+        IRIGATIONQ: values.IRIGATIONQ,
+        SUNPOWER: values.SUNPOWER,
+        SUNENERGY: values.SUNENERGY,
+        SUNENERGYG1: values.SUNENERGYG1,
+        SUNENERGYG2: values.SUNENERGYG2,
+        DATE: now.format("dd/MM/yyyy HH:mm:ss l"),
+      }
+    ).then(() => console.log('Inserted'))
+    .catch((err) => { console.log(err); throw err; });
+  }
 }
 
 

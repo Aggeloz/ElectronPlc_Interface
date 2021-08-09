@@ -15,11 +15,15 @@
             <div class="args">
                 <h1 class="bigTitle">Connection Status</h1>
                 <div>
-                    <h1 class="title">Connected</h1>
+                    <span id="appStatus" class="">-</span>
+                </div>
+                <h1 class="title">Data</h1>
+                <div>
+                    <span id="dataStatus" class="">-</span>
                 </div>
                 <button onclick="initPLC();" class="button">Start Connection</button>
                 <button onclick="stopPLC();" class="button">Stop Connection</button>
-                <button class="button">Toggle Data Insert</button>
+                <button onclick="toggleInsert()" class="button">Toggle Data Insert</button>
             </div>
         </div>
     </div>
