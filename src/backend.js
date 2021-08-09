@@ -23,8 +23,8 @@ let doneWriting = false;
 let timer = 1000;
 let stopReading = false;
 
-// app.commandLine.appendSwitch('remote-debugging-port', '8315');
-// app.commandLine.appendSwitch('host-rules', 'MAP * 127.0.0.1');
+app.commandLine.appendSwitch('remote-debugging-port', '8315');
+app.commandLine.appendSwitch('host-rules', 'MAP * 127.0.0.1');
 
 storage.setDataPath(os.tmpdir());
 process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true';
