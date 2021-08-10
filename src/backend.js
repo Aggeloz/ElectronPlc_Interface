@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, Tray, Menu, Notification, dialog, globalShortcut, } = require('electron');
+const { app, BrowserWindow, ipcMain, Tray, Menu, Notification, dialog, globalShortcut, Debugger } = require('electron');
 const os = require('os');
 const { giveFileGetBlock } = require('./parseDatablock/parser');
 const storage = require('electron-json-storage');
@@ -23,12 +23,13 @@ let doneWriting = false;
 let timer = 1000;
 let stopReading = false;
 
-app.commandLine.appendSwitch('remote-debugging-port', '8315');
-app.commandLine.appendSwitch('host-rules', 'MAP * 127.0.0.1');
+// app.commandLine.appendSwitch('inspect', '5858');
+app.commandLine.appendSwitch('remote-debugging-port', '5858')
+app.commandLine.appendSwitch('host-rules', 'MAP * 127.0.0.1')
+
 
 storage.setDataPath(os.tmpdir());
 process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true';
-
 
 
 // Database connection renderer process handler
@@ -192,17 +193,18 @@ const menuTemplate = [
     label: 'Datablock',
     enabled: false,
     click: () => {
-      new Notification({ title: "Datablock", body: "Opening Datablock selection window" }).show()
+      new Notification({ title: "Datablock", body: "Opening Datablock selection window" }).show();
       createDatablockSelWindow();
     },
     id: 'datablockMenu'
   },
-  {
-    label: 'Charts',
-    click: () => {
-      new Notification({ title: "Charts", body: "Opening Charting Page" }).show()
-    }
-  },
+  // {
+  //   label: 'Charts',
+  //   click: () => {
+  //     new Notification({ title: "Charts", body: "Opening Charting Page" }).show();
+  //     createChartWindow();
+  //   }
+  // },
   {
     label: 'Console',
     click: () => {
@@ -271,6 +273,25 @@ const createConsole = () => {
   mainWindow.removeMenu();
   // mainWindow.webContents.openDevTools();
   mainWindow.setResizable(false);
+};
+
+
+
+const createChartWindow = () => {
+  const chartWindow = new BrowserWindow({
+    width: 1900,
+    height: 1000,
+    webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: false,
+      devTools: true,
+    }
+  });
+
+  chartWindow.loadFile(path.join(__dirname, '/charts/index.html'));
+  chartWindow.removeMenu();
+  // mainWindow.webContents.openDevTools();
+  chartWindow.setResizable(false);
 };
 
 
