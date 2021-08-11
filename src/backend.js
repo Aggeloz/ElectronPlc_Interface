@@ -605,7 +605,7 @@ function checkForTable(event) {
 
 function sendDatatoDB(values) {
   if (toggleInsert) {
-    let now = new Date();
+    let date = new Date();
     // console.log(values);
     db('values').insert(
       {
@@ -647,7 +647,8 @@ function sendDatatoDB(values) {
         SUNENERGY: values.SUNENERGY,
         SUNENERGYG1: values.SUNENERGYG1,
         SUNENERGYG2: values.SUNENERGYG2,
-        DATE: now.format("dd/MM/yyyy HH:mm:ss l"),
+        DATE: date.getDate() + '/' + (date.getMonth() + 1) + '/' + date.getFullYear(),
+        TIME: date.getHours() + ':' + date.getMinutes() + ':' + date.getSeconds() + '-' + date.getMilliseconds(),
       }
     ).then(() => console.log('Inserted'))
     .catch((err) => { console.log(err); throw err; });
